@@ -19,17 +19,21 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+from collections.abc import Callable
 from typing import Protocol
 
+from sqlalchemy import Connection
 
-MigrationCode = str
 
-MigrationSpec = MigrationCode | tuple[MigrationCode, MigrationCode]
+MigrationStatement = str | Callable[[Connection], None]
+"""Single migration statement or callable with execution logic"""
+
+MigrationStep = MigrationStatement | tuple[MigrationStatement, MigrationStatement]
+"""One step of migration. One migration can contain multiple steps"""
 
 
 class MigrationModule(Protocol):
-    MIGRATIONS: list[MigrationSpec]
+    """Each migration module must contain list of migrations in the `MIGRATIONS` global variable."""
 
-
-MigrationsSpec = list[MigrationSpec] | MigrationModule
+    MIGRATIONS: MigrationStep | list[MigrationStep]
+    """Migration step or list of migration steps. The container MUST be the `list`"""

@@ -21,16 +21,20 @@
 # SOFTWARE.
 from sqlalchemy import Connection
 
-from .types import MigrationsSpec
+from .types import MigrationModule
 
 
 class Minimi:
-    def __init__(self, connection: Connection, migrations: MigrationsSpec):
+    """Apply or roll back migrations"""
+
+    def __init__(self, connection: Connection, migrations: list[MigrationModule]):
         self.connection = connection
         self.migrations = migrations
 
     def apply(self):
+        """Apply all unapplied migrations"""
         raise NotImplementedError
 
     def rollback(self):
+        """Rollback all migrations"""
         raise NotImplementedError
