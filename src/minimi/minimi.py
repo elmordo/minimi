@@ -19,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from sa_values import SaValues
+from sa_values.values import MultiValueKey
 from sqlalchemy import Connection
 
 from .types import MigrationModule
@@ -27,14 +29,45 @@ from .types import MigrationModule
 class Minimi:
     """Apply or roll back migrations"""
 
+    SA_VALUE_MIGRATION_KEY = "minimi.migration"
+
     def __init__(self, connection: Connection, migrations: list[MigrationModule]):
         self.connection = connection
         self.migrations = migrations
 
     def apply(self):
         """Apply all unapplied migrations"""
-        raise NotImplementedError
+        applied_migrations = self._get_applied_migrations()
+        mv = self._get_multi_value()
+        for m in self.migrations:
+            migration_name = self._get_migration_name(m)
+            if migration_name not in applied_migrations:
+                self._apply_migration(m)
+                mv.add(migration_name)
 
     def rollback(self):
         """Rollback all migrations"""
+        applied_migrations = self._get_applied_migrations()
+        mv = self._get_multi_value()
+        for m in self.migrations:
+            migration_name = self._get_migration_name(m)
+            if migration_name in applied_migrations:
+                self._rollback_migration(m)
+                mv.delete(migration_name)
+
+    def _get_applied_migrations(self) -> list[str]:
+        """Get a list of applied migrations"""
+        return self._get_multi_value().get_all()
+
+    def _get_multi_value(self) -> MultiValueKey:
+        return SaValues(self.connection).multi_value_key(self.SA_VALUE_MIGRATION_KEY)
+
+    def _get_migration_name(self, mod: MigrationModule) -> str:
+        """Get migration module name"""
+        return mod.__name__
+
+    def _apply_migration(self, mod: MigrationModule) -> None:
+        raise NotImplementedError
+
+    def _rollback_migration(self, mod: MigrationModule) -> None:
         raise NotImplementedError

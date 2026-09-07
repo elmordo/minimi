@@ -35,5 +35,8 @@ MigrationStep = MigrationStatement | tuple[MigrationStatement, MigrationStatemen
 class MigrationModule(Protocol):
     """Each migration module must contain list of migrations in the `MIGRATIONS` global variable."""
 
+    __name__: str
+    """Name of the migration module"""
+
     MIGRATIONS: MigrationStep | list[MigrationStep]
     """Migration step or list of migration steps. The container MUST be the `list`"""
