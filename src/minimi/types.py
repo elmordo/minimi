@@ -20,7 +20,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .minimi import Minimi
+from typing import Protocol
 
 
-__all__ = ["Minimi"]
+MigrationCode = str
+
+MigrationSpec = MigrationCode | tuple[MigrationCode, MigrationCode]
+
+
+class MigrationModule(Protocol):
+    MIGRATIONS: list[MigrationSpec]
+
+
+MigrationsSpec = list[MigrationSpec] | MigrationModule

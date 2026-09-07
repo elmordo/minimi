@@ -19,8 +19,18 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from sqlalchemy import Connection
 
-from .minimi import Minimi
+from .types import MigrationsSpec
 
 
-__all__ = ["Minimi"]
+class Minimi:
+    def __init__(self, connection: Connection, migrations: MigrationsSpec):
+        self.connection = connection
+        self.migrations = migrations
+
+    def apply(self):
+        raise NotImplementedError
+
+    def rollback(self):
+        raise NotImplementedError
