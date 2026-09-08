@@ -47,6 +47,12 @@ package-dir = { "" = "src" }
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
 order-by-type = false
