@@ -58,6 +58,7 @@ class Minimi:
 
                     raise
                 applied.append(migration_name)
+                mv.add(migration_name)
 
     def rollback(self):
         """Rollback all migrations"""
@@ -81,7 +82,10 @@ class Minimi:
         return mod.__name__
 
     def _apply_migration(self, mod: MigrationModule) -> None:
-        raise NotImplementedError
+        steps = self._extract_miration_steps(mod)
+
+        for step in steps:
+            pass
 
     def _rollback_migration(self, mod: MigrationModule) -> None:
         raise NotImplementedError
@@ -90,7 +94,16 @@ class Minimi:
         """Extract migration steps from migration module"""
         if type(mod.MIGRATIONS) is list:
             # migration step list is returned as-is
-            return cast(list[MigrationStep], mod.MIGRATIONS)
+            steps = cast(list[MigrationStep], mod.MIGRATIONS)
         else:
             # single migration step is wrapped in a list
-            return [cast(MigrationStep, mod.MIGRATIONS)]
+            steps = [cast(MigrationStep, mod.MIGRATIONS)]
+
+        steps = [self._normalize_step(s) for s in steps]
+
+        return steps
+
+    def _normalize_step(self, step: MigrationStep) -> tuple[str, str]:
+        if type(step) is tuple:
+            return step
+        return step, None
