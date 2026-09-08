@@ -19,11 +19,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from typing import cast
+
 from sa_values import SaValues
 from sa_values.values import MultiValueKey
 from sqlalchemy import Connection
 
-from .types import MigrationModule
+from .types import MigrationModule, MigrationStep
 
 
 class Minimi:
@@ -39,11 +41,23 @@ class Minimi:
         """Apply all unapplied migrations"""
         applied_migrations = self._get_applied_migrations()
         mv = self._get_multi_value()
+        applied = []
         for m in self.migrations:
             migration_name = self._get_migration_name(m)
             if migration_name not in applied_migrations:
                 self._apply_migration(m)
-                mv.add(migration_name)
+                try:
+                    mv.add(migration_name)
+                except Exception:
+                    for to_revert in reversed(applied):
+                        try:
+                            self._rollback_migration(to_revert)
+                        except Exception:  # noqa
+                            # TODO: log error and better exception catching
+                            pass
+
+                    raise
+                applied.append(migration_name)
 
     def rollback(self):
         """Rollback all migrations"""
@@ -71,3 +85,12 @@ class Minimi:
 
     def _rollback_migration(self, mod: MigrationModule) -> None:
         raise NotImplementedError
+
+    def _extract_miration_steps(self, mod: MigrationModule) -> list[MigrationStep]:
+        """Extract migration steps from migration module"""
+        if type(mod.MIGRATIONS) is list:
+            # migration step list is returned as-is
+            return cast(list[MigrationStep], mod.MIGRATIONS)
+        else:
+            # single migration step is wrapped in a list
+            return [cast(MigrationStep, mod.MIGRATIONS)]

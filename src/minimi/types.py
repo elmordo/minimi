@@ -28,7 +28,7 @@ from sqlalchemy import Connection
 MigrationStatement = str | Callable[[Connection], None]
 """Single migration statement or callable with execution logic"""
 
-MigrationStep = MigrationStatement | tuple[MigrationStatement, MigrationStatement]
+MigrationStep = MigrationStatement | tuple[MigrationStatement | None, MigrationStatement | None]
 """One step of migration. One migration can contain multiple steps"""
 
 
