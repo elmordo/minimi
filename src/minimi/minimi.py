@@ -22,10 +22,10 @@
 from typing import cast
 
 from sa_values import SaValues
-from sa_values.values import MultiValueKey
 from sqlalchemy import Connection
 
-from .types import MigrationModule, MigrationStep
+from .migrations import get_migration_name, normalize_migration_steps
+from .types import MigrationModule
 
 
 class Minimi:
@@ -36,74 +36,55 @@ class Minimi:
     def __init__(self, connection: Connection, migrations: list[MigrationModule]):
         self.connection = connection
         self.migrations = migrations
+        self._applied_migrations = SaValues(self.connection).multi_value_key(
+            self.SA_VALUE_MIGRATION_KEY
+        )
 
     def apply(self):
         """Apply all unapplied migrations"""
-        applied_migrations = self._get_applied_migrations()
-        mv = self._get_multi_value()
-        applied = []
-        for m in self.migrations:
-            migration_name = self._get_migration_name(m)
-            if migration_name not in applied_migrations:
-                self._apply_migration(m)
-                try:
-                    mv.add(migration_name)
-                except Exception:
-                    for to_revert in reversed(applied):
-                        try:
-                            self._rollback_migration(to_revert)
-                        except Exception:  # noqa
-                            # TODO: log error and better exception catching
-                            pass
+        applied_migrations = set(self._applied_migrations.get_all())
+        for mod in self.migrations:
+            migration_name = get_migration_name(mod)
+            if migration_name in applied_migrations:
+                continue
+            self._apply_migration(mod)
 
-                    raise
-                applied.append(migration_name)
-                mv.add(migration_name)
+            try:
+                self._applied_migrations.add(migration_name)
+            except Exception:
+                try:
+                    self._rollback_migration(mod)
+                except Exception:  # noqa
+                    # TODO: log error and better exception catching
+                    pass
+
+                raise
+            self._applied_migrations.add(migration_name)
 
     def rollback(self):
-        """Rollback all migrations"""
-        applied_migrations = self._get_applied_migrations()
-        mv = self._get_multi_value()
-        for m in self.migrations:
-            migration_name = self._get_migration_name(m)
-            if migration_name in applied_migrations:
-                self._rollback_migration(m)
-                mv.delete(migration_name)
+        """Roll back all migrations"""
+        applied_migrations = set(self._applied_migrations.get_all())
 
-    def _get_applied_migrations(self) -> list[str]:
-        """Get a list of applied migrations"""
-        return self._get_multi_value().get_all()
-
-    def _get_multi_value(self) -> MultiValueKey:
-        return SaValues(self.connection).multi_value_key(self.SA_VALUE_MIGRATION_KEY)
-
-    def _get_migration_name(self, mod: MigrationModule) -> str:
-        """Get migration module name"""
-        return mod.__name__
+        for m in reversed(self.migrations):
+            migration_name = get_migration_name(m)
+            if migration_name not in applied_migrations:
+                continue
+            self._rollback_migration(m)
+            self._applied_migrations.delete(migration_name)
 
     def _apply_migration(self, mod: MigrationModule) -> None:
-        steps = self._extract_miration_steps(mod)
-
+        steps = normalize_migration_steps(mod.MIGRATIONS)
+        applied_steps = []
         for step in steps:
-            pass
+            try:
+                step.up(self.connection)
+            except Exception:
+                for revert_step in reversed(applied_steps):
+                    revert_step.down(self.connection)
+                raise
+            applied_steps.append(step)
 
     def _rollback_migration(self, mod: MigrationModule) -> None:
-        raise NotImplementedError
-
-    def _extract_miration_steps(self, mod: MigrationModule) -> list[MigrationStep]:
-        """Extract migration steps from migration module"""
-        if type(mod.MIGRATIONS) is list:
-            # migration step list is returned as-is
-            steps = cast(list[MigrationStep], mod.MIGRATIONS)
-        else:
-            # single migration step is wrapped in a list
-            steps = [cast(MigrationStep, mod.MIGRATIONS)]
-
-        steps = [self._normalize_step(s) for s in steps]
-
-        return steps
-
-    def _normalize_step(self, step: MigrationStep) -> tuple[str, str]:
-        if type(step) is tuple:
-            return step
-        return step, None
+        steps = normalize_migration_steps(mod.MIGRATIONS)
+        for step in reversed(steps):
+            step.down(self.connection)

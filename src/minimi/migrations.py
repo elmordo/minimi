@@ -23,7 +23,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import Connection, text
 
-from .types import MigrationCallback, MigrationStatement, MigrationStep
+from .types import MigrationCallback, MigrationModule, MigrationStatement, MigrationStep
 
 
 @dataclass
@@ -38,6 +38,11 @@ def normalize_migration_steps(
     """Convert migrations to sequence of tuple"""
     steps = _generic_steps_to_list(steps)
     return [_step_to_callback_pair(s) for s in steps]
+
+
+def get_migration_name(mod: MigrationModule) -> str:
+    """Extract migration name from the module"""
+    return mod.__name__
 
 
 def _generic_steps_to_list(steps: MigrationStep | list[MigrationStep]) -> list[MigrationStep]:
