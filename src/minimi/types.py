@@ -25,7 +25,9 @@ from typing import Protocol
 from sqlalchemy import Connection
 
 
-MigrationStatement = str | Callable[[Connection], None]
+MigrationCallback = Callable[[Connection], None]
+
+MigrationStatement = str | MigrationCallback
 """Single migration statement or callable with execution logic"""
 
 MigrationStep = MigrationStatement | tuple[MigrationStatement | None, MigrationStatement | None]
