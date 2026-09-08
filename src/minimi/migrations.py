@@ -23,6 +23,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import Connection, text
 
+from .exceptions import InvalidModuleStructureError
 from .types import MigrationCallback, MigrationModule, MigrationStatement, MigrationStep
 
 
@@ -41,8 +42,18 @@ def normalize_migration_steps(
 
 
 def get_migration_name(mod: MigrationModule) -> str:
-    """Extract migration name from the module"""
-    return mod.__name__
+    """Extract migration name from the module
+
+    Raises:
+        InvalidModuleStructureError: If module does not have the `__name__` attribute
+    """
+    try:
+        return mod.__name__
+    except AttributeError:
+        raise InvalidModuleStructureError(
+            f"Module {mod} does not have __name__ attribute. "
+            "Make sure that module is a valid Python module."
+        )
 
 
 def _generic_steps_to_list(steps: MigrationStep | list[MigrationStep]) -> list[MigrationStep]:
@@ -55,31 +66,38 @@ def _generic_steps_to_list(steps: MigrationStep | list[MigrationStep]) -> list[M
         return [steps]
 
 
-def _step_to_callback_pair(step: MigrationStep) -> MigrationCallbackPair:
-    up = None
-    down = None
-
+def _step_to_callback_pair(step: MigrationStep | None) -> MigrationCallbackPair:
     step_tuple = _step_to_tuple(step)
-
+    up = _statement_to_callback(step_tuple[0])
+    down = _statement_to_callback(step_tuple[1])
     return MigrationCallbackPair(up, down)
 
 
 def _step_to_tuple(
-    step: MigrationStep,
+    step: MigrationStep | None,
 ) -> tuple[MigrationStatement | None, MigrationStatement | None]:
     """Convert step to tuple format"""
-    if isinstance(step, tuple):
+    if step is None:
+        return None, None
+    elif isinstance(step, tuple):
         return step
     else:
         return step, step
 
 
-def _statement_to_callback(stmt: MigrationStatement) -> MigrationCallback:
+def _statement_to_callback(stmt: MigrationStatement | None) -> MigrationCallback:
     """Check the type of the stmt. If it is the `str`, convert it into the callback"""
+
+    if stmt is None:
+        return _noop
     if callable(stmt):
         return stmt
     else:
         return _make_callback(stmt)
+
+
+def _noop(_conn: Connection):
+    pass
 
 
 def _make_callback(stmt: str) -> MigrationCallback:

@@ -23,9 +23,11 @@ from typing import cast
 
 from sa_values import SaValues
 from sqlalchemy import Connection
+from sqlalchemy.exc import DBAPIError
 
-from .migrations import get_migration_name, normalize_migration_steps
-from .types import MigrationModule
+from .exceptions import InvalidModuleStructureError, MigrationFailedError
+from .migrations import get_migration_name, MigrationCallbackPair, normalize_migration_steps
+from .types import MigrationCallback, MigrationModule
 
 
 class Minimi:
@@ -73,18 +75,43 @@ class Minimi:
             self._applied_migrations.delete(migration_name)
 
     def _apply_migration(self, mod: MigrationModule) -> None:
-        steps = normalize_migration_steps(mod.MIGRATIONS)
+        """Apply a single migration module"""
+        steps = self._get_normalized_steps(mod)
         applied_steps = []
         for step in steps:
             try:
-                step.up(self.connection)
-            except Exception:
+                self._call_callback(step.up)
+            except MigrationFailedError:
                 for revert_step in reversed(applied_steps):
-                    revert_step.down(self.connection)
+                    try:
+                        revert_step.down(self.connection)
+                    except MigrationFailedError:
+                        # stop on rollback failure
+                        break
                 raise
             applied_steps.append(step)
 
     def _rollback_migration(self, mod: MigrationModule) -> None:
-        steps = normalize_migration_steps(mod.MIGRATIONS)
+        """Roll back a single migration module"""
+        steps = self._get_normalized_steps(mod)
         for step in reversed(steps):
-            step.down(self.connection)
+            self._call_callback(step.down)
+
+    def _call_callback(self, cbk: MigrationCallback | None):
+        """Call the migration callback and handle DB related errors."""
+        if cbk is None:
+            return
+
+        try:
+            cbk(self.connection)
+        except DBAPIError as err:
+            raise MigrationFailedError from err
+
+    @staticmethod
+    def _get_normalized_steps(mod) -> list[MigrationCallbackPair]:
+        try:
+            return normalize_migration_steps(mod.MIGRATIONS)
+        except AttributeError:
+            raise InvalidModuleStructureError(
+                f"Module {mod.__name__} does not have a MIGRATIONS attribute"
+            )
