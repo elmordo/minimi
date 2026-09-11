@@ -19,49 +19,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from dataclasses import dataclass
 
-import pytest
-from sa_values import setup_sa_values
-import sqlalchemy
-
-from .shared import MigrationModulePair
+from minimi.types import MigrationModule
 
 
-@pytest.fixture()
-def db_migrations(db_type) -> MigrationModulePair:
-    if db_type == "sqlite":
-        from ._migrations.sqlite import fail, success
-    else:
-        raise NotImplementedError
-
-    return MigrationModulePair(
-        success=success.MIGRATIONS,
-        failure=fail.MIGRATIONS,
-    )
-
-
-@pytest.fixture(autouse=True)
-def _sa_setup(db_connection):
-    setup_sa_values(db_connection)
-
-
-@pytest.fixture()
-def db_connection(db_engine) -> sqlalchemy.engine.Connection:
-    return db_engine.connect()
-
-
-@pytest.fixture()
-def db_engine(db_uri) -> sqlalchemy.engine.Engine:
-    return sqlalchemy.create_engine(db_uri)
-
-
-@pytest.fixture()
-def db_uri(db_type) -> str:
-    if db_type == "sqlite":
-        return "sqlite:///:memory:"
-    raise NotImplementedError
-
-
-@pytest.fixture(params=["sqlite"])
-def db_type(request: pytest.FixtureRequest) -> str:
-    return request.param
+@dataclass()
+class MigrationModulePair:
+    success: list[MigrationModule]
+    failure: list[MigrationModule]
