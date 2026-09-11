@@ -19,3 +19,28 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+import pytest
+import sqlalchemy
+
+
+@pytest.fixture()
+def db_connection(db_engine) -> sqlalchemy.engine.Connection:
+    return db_engine.connect()
+
+
+@pytest.fixture()
+def db_engine(db_uri) -> sqlalchemy.engine.Engine:
+    return sqlalchemy.create_engine(db_uri)
+
+
+@pytest.fixture()
+def db_uri(db_type) -> str:
+    if db_type == "sqlite":
+        return "sqlite:///:memory:"
+    raise NotImplementedError
+
+
+@pytest.fixture(params=["sqlite"])
+def db_type(request: pytest.FixtureRequest) -> str:
+    return request.param
