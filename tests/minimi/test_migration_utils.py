@@ -23,7 +23,13 @@ from unittest.mock import MagicMock
 
 from sqlalchemy import Connection, text
 
-from minimi.migrations import _noop, MigrationCallbackPair, normalize_migration_steps
+from minimi.exceptions import InvalidModuleStructureError
+from minimi.migrations import (
+    _noop,
+    get_migration_name,
+    MigrationCallbackPair,
+    normalize_migration_steps,
+)
 
 
 def test_normalize_empty_list():
@@ -200,3 +206,20 @@ def test_normalize_list_of_multiple_steps():
     result[3].up(conn)
     result[3].down(conn)
     conn.execute.assert_not_called()
+
+
+def test_get_migration_name_valid():
+    class DummyModule:
+        pass
+
+    assert get_migration_name(DummyModule) == "DummyModule"
+
+
+def test_get_migration_name_missing_name():
+    class DummyModuleWithoutName:
+        pass
+
+    import pytest
+
+    with pytest.raises(InvalidModuleStructureError, match="does not have __name__ attribute"):
+        get_migration_name(DummyModuleWithoutName())
