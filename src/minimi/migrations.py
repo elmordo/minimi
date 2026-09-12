@@ -29,8 +29,8 @@ from .types import MigrationCallback, MigrationModule, MigrationStatement, Migra
 
 @dataclass
 class MigrationCallbackPair:
-    up: MigrationCallback | None
-    down: MigrationCallback | None
+    up: MigrationCallback
+    down: MigrationCallback
 
 
 def normalize_migration_steps(
@@ -82,7 +82,7 @@ def _step_to_tuple(
     elif isinstance(step, tuple):
         return step
     else:
-        return step, step
+        return step, None
 
 
 def _statement_to_callback(stmt: MigrationStatement | None) -> MigrationCallback:
