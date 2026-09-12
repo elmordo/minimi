@@ -61,7 +61,6 @@ class Minimi:
                     pass
 
                 raise
-            self._applied_migrations.add(migration_name)
 
     def rollback(self):
         """Roll back all migrations"""
@@ -84,7 +83,7 @@ class Minimi:
             except MigrationFailedError:
                 for revert_step in reversed(applied_steps):
                     try:
-                        revert_step.down(self.connection)
+                        self._call_callback(revert_step.down)
                     except MigrationFailedError:
                         # stop on rollback failure
                         break
