@@ -25,9 +25,9 @@ from sqlalchemy import Connection, text
 
 from minimi.exceptions import InvalidModuleStructureError
 from minimi.migrations import (
-    _noop,
     get_migration_name,
     MigrationCallbackPair,
+    noop_migration,
     normalize_migration_steps,
 )
 
@@ -79,7 +79,7 @@ def test_normalize_single_callback_step():
     assert len(result) == 1
     pair = result[0]
     assert pair.up is mock_callback
-    assert pair.down is _noop
+    assert pair.down is noop_migration
 
     conn = MagicMock(spec=Connection)
     pair.up(conn)
