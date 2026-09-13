@@ -1,7 +1,7 @@
-from . import m01P_create_users, m02P_add_email
+from . import m01p_create_users, m02p_add_email
 
 
 MIGRATIONS = [
-    m01P_create_users,
-    m02P_add_email,
+    m01p_create_users,
+    m02p_add_email,
 ]

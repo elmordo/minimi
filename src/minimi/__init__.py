@@ -22,4 +22,5 @@
 
 from .minimi import Minimi
 
+
 __all__ = ["Minimi"]

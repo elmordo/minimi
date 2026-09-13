@@ -21,8 +21,8 @@
 # SOFTWARE.
 
 import pytest
-import sqlalchemy
 from sa_values import setup_sa_values
+import sqlalchemy
 
 from .shared import MigrationModulePair
 

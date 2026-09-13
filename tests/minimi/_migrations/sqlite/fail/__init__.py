@@ -1,8 +1,8 @@
-from . import m01P_create_users, m02P_add_email, m03F_invalid_sql
+from . import m01p_create_users, m02p_add_email, m03f_invalid_sql
 
 
 MIGRATIONS = [
-    m01P_create_users,
-    m02P_add_email,
-    m03F_invalid_sql,
+    m01p_create_users,
+    m02p_add_email,
+    m03f_invalid_sql,
 ]

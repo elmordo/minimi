@@ -170,7 +170,7 @@ def test_apply_step_failure_rolls_back_previous_steps(db_connection):
 
     class StepFailMigration:
         __name__ = "step_fail_migration"
-        MIGRATIONS = [
+        MIGRATIONS = [  # noqa: RUF012
             (
                 "CREATE TABLE step_rollback_test (id INTEGER PRIMARY KEY);",
                 "DROP TABLE step_rollback_test;",
@@ -195,7 +195,7 @@ def test_apply_step_failure_when_revert_step_also_fails(db_connection):
 
     class RevertFailMigration:
         __name__ = "revert_fail_migration"
-        MIGRATIONS = [
+        MIGRATIONS = [  # noqa: RUF012
             (
                 "CREATE TABLE step_revert_fail (id INTEGER PRIMARY KEY);",
                 "INVALID REVERT SQL;",
@@ -226,7 +226,7 @@ def test_apply_and_rollback_with_callable_steps(db_connection):
 
     class CallableMigration:
         __name__ = "callable_migration"
-        MIGRATIONS = [(up_func, down_func)]
+        MIGRATIONS = [(up_func, down_func)]  # noqa: RUF012
 
     minimi = Minimi(db_connection, [CallableMigration])
     minimi.apply()
@@ -331,7 +331,6 @@ def test_apply_rolls_back_when_record_fails(db_connection):
         )
 
     minimi = Minimi(db_connection, [SingleMigration])
-    original_add = minimi._applied_migrations.add
 
     def mock_add(name):
         raise RuntimeError("Failed to record migration in DB")
