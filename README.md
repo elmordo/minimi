@@ -31,7 +31,7 @@ MIGRATIONS = [
 # m01_db_init.py
 
 # the UP migration only
-MIGRATION = """
+MIGRATIONS = """
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS users (
 # m02_new_table.py
 
 # the UP and DOWN migrations as tuple of two strings
-MIGRATION = """
+MIGRATIONS = """
 CREATE TABLE IF NOT EXISTS user_comments (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL
@@ -66,6 +66,7 @@ from sa_values import setup_sa_values
 
 import mylib.migrations as migrations
 
+
 def main():
     # initialize the sa_values first
     conn = create_engine("sqlite:///:memory:").connect()
@@ -73,15 +74,17 @@ def main():
     # run the migrations
     Minimi(conn, migrations).apply()
 
+
 if __name__ == "__main__":
     main()
 ```
 
 # Usage
 
-The `__init__.py` file contains a list of migration modules in the `MIGRATIONS` global variable with list of migration modules.
+The `__init__.py` file contains a list of migration modules in the `MIGRATIONS` global variable with list of migration
+modules.
 
-Each migration module must contain the `MIGRATION` global variable with the migration. 
+Each migration module must contain the `MIGRATION` global variable with the migration.
 
 # Buy me a ~~coffee~~ beer
 
