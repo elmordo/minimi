@@ -1,5 +1,22 @@
-Minimal migration library for managing database migrations in small projects where a full featured migration tool would
-be overkill.
+**MINI**mal **MI**gration library tool for managing database migrations in small projects where
+a full-featured migration tool would be overkill.
+
+Why the "_para_" suffix? The original name of the library `minimi` was rejected by the pypi.org because
+it is too similar to another library. Also, the Minimi Para is compatct version of the original Minimi :-)
+
+```
+
+                                     ====
+             __@----------------\     \
+||=========||====             ===\_____\___________        // //
+||         ||====                                  |======|=| ALTER TABLE users DROP COLUMN email
+||=========||---_____======------------------------|=|     \\ \\
+               /   /  \\ /    \____________|      ||
+              /   /------                         ||
+             /___/                                ||
+                                                  ||
+                                                 ====
+```
 
 # Quick start
 
