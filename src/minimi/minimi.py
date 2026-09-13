@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) [YEAR] [COPYRIGHT HOLDER]
+# Copyright (c) 2026 Authors and contributors listed in the AUTHORS file
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from typing import cast
 
 from sa_values import SaValues
 from sqlalchemy import Connection
@@ -39,7 +38,7 @@ class Minimi:
         self.connection = connection
         self.migrations = migrations
         self._applied_migrations = SaValues(self.connection).multi_value_key(
-            self.SA_VALUE_MIGRATION_KEY
+            self.SA_VALUE_MIGRATION_KEY,
         )
 
     def apply(self):
@@ -112,5 +111,5 @@ class Minimi:
             return normalize_migration_steps(mod.MIGRATIONS)
         except AttributeError:
             raise InvalidModuleStructureError(
-                f"Module {mod.__name__} does not have a MIGRATIONS attribute"
+                f"Module {mod.__name__} does not have a MIGRATIONS attribute",
             )

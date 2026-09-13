@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) [YEAR] [COPYRIGHT HOLDER]
+# Copyright (c) 2026 Authors and contributors listed in the AUTHORS file
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@
 # SOFTWARE.
 
 import pytest
-from sa_values import setup_sa_values
 import sqlalchemy
+from sa_values import setup_sa_values
 
 from .shared import MigrationModulePair
 

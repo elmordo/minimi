@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) [YEAR] [COPYRIGHT HOLDER]
+# Copyright (c) 2026 Authors and contributors listed in the AUTHORS file
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ class MigrationCallbackPair:
 
 
 def normalize_migration_steps(
-    steps: MigrationStep | list[MigrationStep],
+        steps: MigrationStep | list[MigrationStep],
 ) -> list[MigrationCallbackPair]:
     """Get a list of migration steps in generic format (see the `MigrationStep` type) and convert
     it into the list of `MigrationCallbackPair` instances.
@@ -105,7 +105,7 @@ def _step_to_callback_pair(step: MigrationStep | None) -> MigrationCallbackPair:
 
 
 def _step_to_tuple(
-    step: MigrationStep | None,
+        step: MigrationStep | None,
 ) -> tuple[MigrationStatement | None, MigrationStatement | None]:
     """Convert step to tuple. Each element of the tuple is a migration statement or `None`."""
     if step is None:
