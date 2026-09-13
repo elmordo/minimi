@@ -33,11 +33,20 @@ from minimi.migrations import (
 
 
 def test_normalize_empty_list():
+    """Tests normalization of an empty list of migration steps.
+
+    Expected result: Returns an empty list with no MigrationCallbackPairs.
+    """
     result = normalize_migration_steps([])
     assert result == []
 
 
 def test_normalize_single_string_step():
+    """Tests normalization of a single SQL string migration step.
+
+    Expected result: Produces a single MigrationCallbackPair where `up` executes
+    the SQL statement and `down` is a no-op (does not execute any SQL).
+    """
     stmt = "CREATE TABLE users (id INTEGER PRIMARY KEY)"
     result = normalize_migration_steps(stmt)
 
@@ -59,6 +68,11 @@ def test_normalize_single_string_step():
 
 
 def test_normalize_single_callback_step():
+    """Tests normalization of a single callable function as a migration step.
+
+    Expected result: Produces a MigrationCallbackPair where `up` is the provided
+    callable and `down` defaults to `_noop`.
+    """
     mock_callback = MagicMock()
     result = normalize_migration_steps(mock_callback)
 
@@ -73,6 +87,11 @@ def test_normalize_single_callback_step():
 
 
 def test_normalize_single_none_step():
+    """Tests normalization of a `None` migration step.
+
+    Expected result: Produces a MigrationCallbackPair where both `up` and `down`
+    are no-op callables that execute nothing on the connection.
+    """
     result = normalize_migration_steps(None)
 
     assert len(result) == 1
@@ -87,6 +106,11 @@ def test_normalize_single_none_step():
 
 
 def test_normalize_tuple_with_strings():
+    """Tests normalization of a 2-tuple containing (up_sql, down_sql) strings.
+
+    Expected result: Produces a MigrationCallbackPair whose `up` callback executes
+    the up SQL statement and `down` callback executes the down SQL statement.
+    """
     up_stmt = "CREATE TABLE users (id INTEGER PRIMARY KEY)"
     down_stmt = "DROP TABLE users"
     result = normalize_migration_steps((up_stmt, down_stmt))
@@ -108,6 +132,11 @@ def test_normalize_tuple_with_strings():
 
 
 def test_normalize_tuple_with_callbacks():
+    """Tests normalization of a 2-tuple of custom callables `(up_callback, down_callback)`.
+
+    Expected result: Produces a MigrationCallbackPair with the matching up and down
+    callable objects, calling only the appropriate callback on execution.
+    """
     mock_up = MagicMock()
     mock_down = MagicMock()
     result = normalize_migration_steps((mock_up, mock_down))
@@ -127,6 +156,11 @@ def test_normalize_tuple_with_callbacks():
 
 
 def test_normalize_tuple_with_none():
+    """Tests normalization of 2-tuples containing `None` for up, down, or both.
+
+    Expected result: Produces MigrationCallbackPairs where `None` components are converted
+    to no-op callables while preserving the active callback or SQL statement.
+    """
     mock_up = MagicMock()
     result = normalize_migration_steps((mock_up, None))
 
@@ -163,6 +197,11 @@ def test_normalize_tuple_with_none():
 
 
 def test_normalize_list_of_multiple_steps():
+    """Tests normalization of a list containing heterogeneous migration step types.
+
+    Expected result: Returns a list of MigrationCallbackPairs in the exact original order,
+    each correctly mapped and executable with the database connection.
+    """
     mock_callback = MagicMock()
     steps = [
         "CREATE TABLE t1 (id INT)",
@@ -209,6 +248,11 @@ def test_normalize_list_of_multiple_steps():
 
 
 def test_get_migration_name_valid():
+    """Tests retrieving migration name from a valid object or module with `__name__`.
+
+    Expected result: Returns the `__name__` string attribute value.
+    """
+
     class DummyModule:
         pass
 
@@ -216,6 +260,11 @@ def test_get_migration_name_valid():
 
 
 def test_get_migration_name_missing_name():
+    """Tests retrieving migration name from an object lacking `__name__` attribute.
+
+    Expected result: Raises `InvalidModuleStructureError`.
+    """
+
     class DummyModuleWithoutName:
         pass
 

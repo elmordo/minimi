@@ -27,6 +27,11 @@ from minimi.exceptions import InvalidModuleStructureError, MigrationFailedError
 
 
 def test_apply_migrations(db_connection, db_migrations):
+    """Tests applying valid migration modules to the database.
+
+    Expected result: Creates database schema elements (e.g. 'users' table and columns)
+    and records all migration names as applied in the tracking table.
+    """
     minimi = Minimi(db_connection, db_migrations.success)
     minimi.apply()
 
@@ -44,6 +49,11 @@ def test_apply_migrations(db_connection, db_migrations):
 
 
 def test_apply_migrations_idempotent(db_connection, db_migrations):
+    """Tests applying migrations repeatedly in succession.
+
+    Expected result: Second application has no effect on database schema and applied
+    migrations list remains unchanged without duplicate execution.
+    """
     minimi = Minimi(db_connection, db_migrations.success)
     minimi.apply()
     minimi.apply()
@@ -55,6 +65,11 @@ def test_apply_migrations_idempotent(db_connection, db_migrations):
 
 
 def test_apply_invalid_migrations(db_connection, db_migrations):
+    """Tests applying migrations containing a failing step/statement.
+
+    Expected result: Raises `MigrationFailedError`, records only successful migrations
+    prior to failure, and does not record the failed migration.
+    """
     minimi = Minimi(db_connection, db_migrations.failure)
     with pytest.raises(MigrationFailedError):
         minimi.apply()
@@ -66,6 +81,11 @@ def test_apply_invalid_migrations(db_connection, db_migrations):
 
 
 def test_rollback_migrations(db_connection, db_migrations):
+    """Tests rolling back previously applied migrations.
+
+    Expected result: Reverts database schema modifications (e.g. drops 'users' table)
+    and clears recorded migrations from the tracking table in reverse order.
+    """
     minimi = Minimi(db_connection, db_migrations.success)
     minimi.apply()
 
@@ -81,6 +101,11 @@ def test_rollback_migrations(db_connection, db_migrations):
 
 
 def test_rollback_unapplied_migrations(db_connection, db_migrations):
+    """Tests calling rollback on a database where migrations have not been applied.
+
+    Expected result: Operates safely as a no-op without errors or schema changes,
+    leaving applied migrations empty.
+    """
     minimi = Minimi(db_connection, db_migrations.success)
     minimi.rollback()
 
@@ -90,6 +115,11 @@ def test_rollback_unapplied_migrations(db_connection, db_migrations):
 
 
 def test_partial_apply_and_subsequent_apply(db_connection, db_migrations):
+    """Tests applying a subset of migrations followed by applying the full list.
+
+    Expected result: First application applies only the initial migration, and subsequent
+    application applies remaining unapplied migrations incrementally.
+    """
     first_migration = [db_migrations.success[0]]
     all_migrations = db_migrations.success
 
@@ -112,6 +142,11 @@ def test_partial_apply_and_subsequent_apply(db_connection, db_migrations):
 
 
 def test_rollback_partial_applied(db_connection, db_migrations):
+    """Tests rolling back when only a subset of migrations was previously applied.
+
+    Expected result: Reverts only the applied subset and cleans up tracking records
+    without attempting to roll back unapplied migrations.
+    """
     first_migration = [db_migrations.success[0]]
     all_migrations = db_migrations.success
 
@@ -127,6 +162,12 @@ def test_rollback_partial_applied(db_connection, db_migrations):
 
 
 def test_apply_step_failure_rolls_back_previous_steps(db_connection):
+    """Tests intra-migration step failure during forward application.
+
+    Expected result: Raises `MigrationFailedError` and reverts steps already executed within
+    the same migration module, leaving schema clean and migration unrecorded.
+    """
+
     class StepFailMigration:
         __name__ = "step_fail_migration"
         MIGRATIONS = [
@@ -147,6 +188,11 @@ def test_apply_step_failure_rolls_back_previous_steps(db_connection):
 
 
 def test_apply_step_failure_when_revert_step_also_fails(db_connection):
+    """Tests intra-migration step failure where the revert step itself fails.
+
+    Expected result: Raises `MigrationFailedError` while handling internal revert exception safely.
+    """
+
     class RevertFailMigration:
         __name__ = "revert_fail_migration"
         MIGRATIONS = [
@@ -163,6 +209,11 @@ def test_apply_step_failure_when_revert_step_also_fails(db_connection):
 
 
 def test_apply_and_rollback_with_callable_steps(db_connection):
+    """Tests applying and rolling back migrations defined with custom Python functions.
+
+    Expected result: Executes `up` callable on apply to modify schema, and executes
+    `down` callable on rollback to revert schema changes.
+    """
     called = {"up": False, "down": False}
 
     def up_func(conn):
@@ -190,6 +241,12 @@ def test_apply_and_rollback_with_callable_steps(db_connection):
 
 
 def test_apply_and_rollback_with_none_callback(db_connection):
+    """Tests applying and rolling back a migration whose `MIGRATIONS` is `None`.
+
+    Expected result: Records migration as applied without error on apply, and removes
+    from applied migrations on rollback without modifying database schema.
+    """
+
     class NoneCallbackMigration:
         MIGRATIONS = None
 
@@ -202,6 +259,11 @@ def test_apply_and_rollback_with_none_callback(db_connection):
 
 
 def test_apply_missing_migrations_attribute(db_connection):
+    """Tests applying a migration module that lacks the required `MIGRATIONS` attribute.
+
+    Expected result: Raises `InvalidModuleStructureError` before executing migrations.
+    """
+
     class InvalidModule:
         pass
 
@@ -211,6 +273,11 @@ def test_apply_missing_migrations_attribute(db_connection):
 
 
 def test_apply_missing_name_attribute(db_connection):
+    """Tests applying a migration object that lacks the `__name__` attribute.
+
+    Expected result: Raises `InvalidModuleStructureError` during name validation.
+    """
+
     class ObjectWithoutName:
         MIGRATIONS = "CREATE TABLE no_name (id INT);"
 
@@ -220,6 +287,11 @@ def test_apply_missing_name_attribute(db_connection):
 
 
 def test_rollback_missing_migrations_attribute(db_connection):
+    """Tests rolling back a migration module that lacks the required `MIGRATIONS` attribute.
+
+    Expected result: Raises `InvalidModuleStructureError` when resolving rollback steps.
+    """
+
     class InvalidModule:
         pass
 
@@ -231,6 +303,11 @@ def test_rollback_missing_migrations_attribute(db_connection):
 
 
 def test_rollback_missing_name_attribute(db_connection):
+    """Tests rolling back a migration object that lacks the `__name__` attribute.
+
+    Expected result: Raises `InvalidModuleStructureError` during name validation.
+    """
+
     class NoNameModule:
         pass
 
@@ -240,6 +317,12 @@ def test_rollback_missing_name_attribute(db_connection):
 
 
 def test_apply_rolls_back_when_record_fails(db_connection):
+    """Tests failure when recording an applied migration into the tracking table.
+
+    Expected result: Raises error from tracking failure, rolls back executed migration
+    steps, and leaves database schema clean.
+    """
+
     class SingleMigration:
         __name__ = "record_fail_migration"
         MIGRATIONS = (
