@@ -34,11 +34,16 @@ class Minimi:
 
     SA_VALUE_MIGRATION_KEY = "minimi.migration"
 
-    def __init__(self, connection: Connection, migrations: list[MigrationModule]):
+    def __init__(
+        self,
+        connection: Connection,
+        migrations: list[MigrationModule],
+        migration_value_key: str = SA_VALUE_MIGRATION_KEY,
+    ):
         self.connection = connection
         self.migrations = migrations
         self._applied_migrations = SaValues(self.connection).multi_value_key(
-            self.SA_VALUE_MIGRATION_KEY,
+            migration_value_key,
         )
 
     def apply(self):
