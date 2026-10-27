@@ -43,3 +43,10 @@ class MigrationModule(Protocol):
 
     STEPS: MigrationStep | list[MigrationStep]
     """Migration step or list of migration steps. The container MUST be the `list`"""
+
+
+class MigrationPackage(Protocol):
+    """Package of migration modules"""
+
+    MIGRATIONS: list[MigrationModule]
+    """Migration modules in order to be applied"""
