@@ -20,13 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import Any
+
 from sa_values import SaValues
 from sqlalchemy import Connection
 from sqlalchemy.exc import DBAPIError
 
 from .exceptions import InvalidModuleStructureError, MigrationFailedError
 from .migrations import get_migration_name, MigrationCallbackPair, normalize_migration_steps
-from .types import MigrationCallback, MigrationModule
+from .types import MigrationCallback, MigrationModule, MigrationPackage
 
 
 class Minimi:
@@ -34,11 +36,22 @@ class Minimi:
 
     SA_VALUE_MIGRATION_KEY = "minimi.migration"
 
-    def __init__(self, connection: Connection, migrations: list[MigrationModule]):
+    def __init__(
+        self,
+        connection: Connection,
+        migrations: list[MigrationModule] | MigrationPackage | Any,
+        migration_value_key: str = SA_VALUE_MIGRATION_KEY,
+    ):
         self.connection = connection
-        self.migrations = migrations
+
+        if isinstance(migrations, list):
+            self.migrations: list[MigrationModule] = migrations
+        elif hasattr(migrations, "MIGRATIONS"):
+            self.migrations = migrations.MIGRATIONS
+        else:
+            raise ValueError("Unsupported format of the `migrations` attribute")
         self._applied_migrations = SaValues(self.connection).multi_value_key(
-            self.SA_VALUE_MIGRATION_KEY,
+            migration_value_key,
         )
 
     def apply(self):
@@ -108,8 +121,8 @@ class Minimi:
     @staticmethod
     def _get_normalized_steps(mod) -> list[MigrationCallbackPair]:
         try:
-            return normalize_migration_steps(mod.MIGRATIONS)
+            return normalize_migration_steps(mod.STEPS)
         except AttributeError:
             raise InvalidModuleStructureError(
-                f"Module {mod.__name__} does not have a MIGRATIONS attribute",
+                f"Module {mod.__name__} does not have a STEPS attribute",
             )
