@@ -48,7 +48,7 @@ MIGRATIONS = [
 # m01_db_init.py
 
 # the UP migration only
-MIGRATIONS = """
+STEPS = """
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS users (
 # m02_new_table.py
 
 # the UP and DOWN migrations as tuple of two strings
-MIGRATIONS = """
+STEPS = """
 CREATE TABLE IF NOT EXISTS user_comments (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL
