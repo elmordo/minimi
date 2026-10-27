@@ -170,7 +170,7 @@ def test_apply_step_failure_rolls_back_previous_steps(db_connection):
 
     class StepFailMigration:
         __name__ = "step_fail_migration"
-        MIGRATIONS = [  # noqa: RUF012
+        STEPS = [  # noqa: RUF012
             (
                 "CREATE TABLE step_rollback_test (id INTEGER PRIMARY KEY);",
                 "DROP TABLE step_rollback_test;",
@@ -195,7 +195,7 @@ def test_apply_step_failure_when_revert_step_also_fails(db_connection):
 
     class RevertFailMigration:
         __name__ = "revert_fail_migration"
-        MIGRATIONS = [  # noqa: RUF012
+        STEPS = [  # noqa: RUF012
             (
                 "CREATE TABLE step_revert_fail (id INTEGER PRIMARY KEY);",
                 "INVALID REVERT SQL;",
@@ -226,7 +226,7 @@ def test_apply_and_rollback_with_callable_steps(db_connection):
 
     class CallableMigration:
         __name__ = "callable_migration"
-        MIGRATIONS = [(up_func, down_func)]  # noqa: RUF012
+        STEPS = [(up_func, down_func)]  # noqa: RUF012
 
     minimi = Minimi(db_connection, [CallableMigration])
     minimi.apply()
@@ -241,14 +241,14 @@ def test_apply_and_rollback_with_callable_steps(db_connection):
 
 
 def test_apply_and_rollback_with_none_callback(db_connection):
-    """Tests applying and rolling back a migration whose `MIGRATIONS` is `None`.
+    """Tests applying and rolling back a migration whose `STEPS` is `None`.
 
     Expected result: Records migration as applied without error on apply, and removes
     from applied migrations on rollback without modifying database schema.
     """
 
     class NoneCallbackMigration:
-        MIGRATIONS = None
+        STEPS = None
 
     minimi = Minimi(db_connection, [NoneCallbackMigration])
     minimi.apply()
@@ -259,7 +259,7 @@ def test_apply_and_rollback_with_none_callback(db_connection):
 
 
 def test_apply_missing_migrations_attribute(db_connection):
-    """Tests applying a migration module that lacks the required `MIGRATIONS` attribute.
+    """Tests applying a migration module that lacks the required `STEPS` attribute.
 
     Expected result: Raises `InvalidModuleStructureError` before executing migrations.
     """
@@ -268,7 +268,7 @@ def test_apply_missing_migrations_attribute(db_connection):
         pass
 
     minimi = Minimi(db_connection, [InvalidModule])
-    with pytest.raises(InvalidModuleStructureError, match="does not have a MIGRATIONS attribute"):
+    with pytest.raises(InvalidModuleStructureError, match="does not have a STEPS attribute"):
         minimi.apply()
 
 
@@ -279,7 +279,7 @@ def test_apply_missing_name_attribute(db_connection):
     """
 
     class ObjectWithoutName:
-        MIGRATIONS = "CREATE TABLE no_name (id INT);"
+        STEPS = "CREATE TABLE no_name (id INT);"
 
     minimi = Minimi(db_connection, [ObjectWithoutName()])
     with pytest.raises(InvalidModuleStructureError, match="does not have __name__ attribute"):
@@ -287,7 +287,7 @@ def test_apply_missing_name_attribute(db_connection):
 
 
 def test_rollback_missing_migrations_attribute(db_connection):
-    """Tests rolling back a migration module that lacks the required `MIGRATIONS` attribute.
+    """Tests rolling back a migration module that lacks the required `STEPS` attribute.
 
     Expected result: Raises `InvalidModuleStructureError` when resolving rollback steps.
     """
@@ -298,7 +298,7 @@ def test_rollback_missing_migrations_attribute(db_connection):
     minimi = Minimi(db_connection, [InvalidModule])
     minimi._applied_migrations.add("InvalidModule")
 
-    with pytest.raises(InvalidModuleStructureError, match="does not have a MIGRATIONS attribute"):
+    with pytest.raises(InvalidModuleStructureError, match="does not have a STEPS attribute"):
         minimi.rollback()
 
 
@@ -325,7 +325,7 @@ def test_apply_rolls_back_when_record_fails(db_connection):
 
     class SingleMigration:
         __name__ = "record_fail_migration"
-        MIGRATIONS = (
+        STEPS = (
             "CREATE TABLE record_fail_test (id INT);",
             "DROP TABLE record_fail_test;",
         )
