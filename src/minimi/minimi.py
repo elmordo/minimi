@@ -113,8 +113,8 @@ class Minimi:
     @staticmethod
     def _get_normalized_steps(mod) -> list[MigrationCallbackPair]:
         try:
-            return normalize_migration_steps(mod.MIGRATIONS)
+            return normalize_migration_steps(mod.STEPS)
         except AttributeError:
             raise InvalidModuleStructureError(
-                f"Module {mod.__name__} does not have a MIGRATIONS attribute",
+                f"Module {mod.__name__} does not have a STEPS attribute",
             )
